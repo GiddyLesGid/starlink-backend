@@ -12,8 +12,8 @@ CORS(app)
 PAYHERO_API_USERNAME = os.getenv("PAYHERO_API_USERNAME")
 PAYHERO_API_PASSWORD = os.getenv("PAYHERO_API_PASSWORD")
 
-PAYHERO_CHANNEL_ID = os.getenv("PAYHERO_CHANNEL_ID")  # 5217
-CALLBACK_URL = os.getenv("CALLBACK_URL")  # https://okoa-chapaa-backend.onrender.com/api/payhero/callback
+PAYHERO_CHANNEL_ID = os.getenv("PAYHERO_CHANNEL_ID")  # 
+CALLBACK_URL = os.getenv("CALLBACK_URL")  # https:
 
 # PayHero v2 STK Push endpoint
 PAYHERO_URL = "https://backend.payhero.co.ke/api/v2/payments"
