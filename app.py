@@ -3,7 +3,6 @@ from flask_cors import CORS
 import requests
 import os
 import time
-import base64
 
 app = Flask(__name__)
 CORS(app)
@@ -12,17 +11,20 @@ CORS(app)
 PAYHERO_API_USERNAME = os.getenv("PAYHERO_API_USERNAME")
 PAYHERO_API_PASSWORD = os.getenv("PAYHERO_API_PASSWORD")
 
-PAYHERO_CHANNEL_ID = os.getenv("PAYHERO_CHANNEL_ID")  # 
-CALLBACK_URL = os.getenv("CALLBACK_URL")  # https:
+PAYHERO_AUTH_TOKEN = os.getenv("PAYHERO_AUTH_TOKEN")
+PAYHERO_CHANNEL_ID = os.getenv("PAYHERO_CHANNEL_ID")
+CALLBACK_URL = os.getenv("CALLBACK_URL")
 
-# PayHero v2 STK Push endpoint
 PAYHERO_URL = "https://backend.payhero.co.ke/api/v2/payments"
 # ===================================================
 
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"status": "OK", "service": "OKOA CHAPAA BACKEND"}), 200
+    return jsonify({
+        "status": "OK",
+        "service": "OKOA CHAPAA BACKEND"
+    }), 200
 
 
 @app.route("/api/stk-push", methods=["POST"])
@@ -37,9 +39,11 @@ def stk_push():
     if not phone or not amount:
         return jsonify({"error": "phone and amount are required"}), 400
 
-    # 🔐 Build Basic Auth token
-    auth_string = f"{PAYHERO_API_USERNAME}:{PAYHERO_API_PASSWORD}"
-    auth_token = base64.b64encode(auth_string.encode()).decode()
+    # Validate required env variables
+    if not PAYHERO_AUTH_TOKEN or not PAYHERO_CHANNEL_ID or not CALLBACK_URL:
+        return jsonify({
+            "error": "Missing PayHero configuration in environment variables"
+        }), 500
 
     payload = {
         "amount": int(amount),
@@ -49,11 +53,10 @@ def stk_push():
         "external_reference": reference,
         "customer_name": customer_name,
         "callback_url": CALLBACK_URL
-        # credential_id is OPTIONAL → only if using your own Daraja keys
     }
 
     headers = {
-        "Authorization": f"Basic {auth_token}",
+        "Authorization": f"Basic {PAYHERO_AUTH_TOKEN}",
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
@@ -74,16 +77,23 @@ def stk_push():
 
     except requests.exceptions.RequestException as e:
         print("REQUEST ERROR:", str(e))
-        return jsonify({"error": "Request failed", "details": str(e)}), 500
+        return jsonify({
+            "error": "Request failed",
+            "details": str(e)
+        }), 500
 
 
 @app.route("/api/payhero/callback", methods=["POST"])
 def payhero_callback():
     data = request.get_json(force=True)
+
     print("=== PAYHERO CALLBACK RECEIVED ===")
     print(data)
 
-    # TODO: save transaction status to DB here
+    # Here you can later:
+    # - Save transaction to DB
+    # - Update payment status
+    # - Activate user bundle etc.
 
     return jsonify({"status": "received"}), 200
 
